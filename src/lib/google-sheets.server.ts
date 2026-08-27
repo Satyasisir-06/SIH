@@ -5,6 +5,7 @@ export type SheetRegistrationPayload = {
   submittedAt: string;
   teamName: string;
   teamLeader: string;
+  leaderPhone: string;
   memberCount: number;
   members: string;
   femaleCount: number;
@@ -38,6 +39,7 @@ export function buildSheetPayload(
     submittedAt: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
     teamName: data.teamName,
     teamLeader: data.teamLeader,
+    leaderPhone: members[0]?.phone || "N/A",
     memberCount: members.length,
     members: members
       .map(

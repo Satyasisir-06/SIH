@@ -5,12 +5,12 @@
  * 1. Open Google Sheets (https://sheets.new)
  * 2. Go to: Extensions > Apps Script
  * 3. Delete any default code and paste this entire file
- * 4. Click 'Deploy' > 'New deployment'
+ * 4. Click 'Deploy' > 'New deployment' (or Manage deployments > Edit > New version if updating)
  * 5. Select type: 'Web app'
  * 6. Set 'Execute as': 'Me'
  * 7. Set 'Who has access': 'Anyone'
  * 8. Click 'Deploy', authorize permissions, and copy the Web App URL (ending in /exec)
- * 9. Paste the URL into your .env file as:
+ * 9. Paste the URL into your .env file on Vercel/local as:
  *    GOOGLE_SHEETS_WEBHOOK_URL="https://script.google.com/macros/s/.../exec"
  */
 
@@ -27,13 +27,12 @@ function doPost(e) {
         "Submitted At",
         "Team Name",
         "Team Leader",
+        "Leader Mobile",
         "Members Count",
         "Female Members",
         "Problem ID",
         "Problem Title",
         "Domain",
-        "Fee Amount (₹)",
-        "UPI Txn ID",
         "Member 1 (Leader)",
         "Member 2",
         "Member 3",
@@ -59,13 +58,12 @@ function doPost(e) {
       data.submittedAt,
       data.teamName,
       data.teamLeader,
+      data.leaderPhone || "N/A",
       data.memberCount,
       data.femaleCount,
       data.problemStatementId,
       data.problemStatementTitle,
       data.problemStatementDomain,
-      data.paymentAmount,
-      data.paymentTxnId,
       data.member1,
       data.member2,
       data.member3,
