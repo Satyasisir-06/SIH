@@ -41,6 +41,7 @@ const TEAM_SIZE = 6;
 const emptyMember = (): TeamMemberInput => ({
   name: "",
   collegeRegId: "",
+  phone: "",
   year: "",
   department: "",
   gender: "Male",
@@ -179,6 +180,7 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
       form.members.forEach((m, i) => {
         if (m.name.trim().length < 2) e[`m${i}name`] = "Required";
         if (m.collegeRegId.trim().length < 3) e[`m${i}id`] = "Required";
+        if (!m.phone || m.phone.trim().length < 10) e[`m${i}phone`] = "10-digit mobile number required";
         if (!m.year) e[`m${i}year`] = "Required";
         if (m.department.trim().length < 2) e[`m${i}dept`] = "Required";
       });
@@ -301,6 +303,25 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
                             "members",
                             form.members.map((x, idx) =>
                               idx === i ? { ...x, collegeRegId: e.target.value } : x,
+                            ),
+                          )
+                        }
+                      />
+                    </Field>
+                    <Field
+                      label={i === 0 ? "Mobile Number (Leader WhatsApp)" : "Mobile Number"}
+                      error={errors[`m${i}phone`] ?? undefined}
+                    >
+                      <Input
+                        type="tel"
+                        value={m.phone}
+                        placeholder="10-digit mobile number"
+                        maxLength={13}
+                        onChange={(e) =>
+                          set(
+                            "members",
+                            form.members.map((x, idx) =>
+                              idx === i ? { ...x, phone: e.target.value } : x,
                             ),
                           )
                         }
@@ -529,6 +550,12 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
                     <span className="text-muted-foreground">Team Leader:</span>{" "}
                     <span className="font-semibold text-foreground">
                       {form.teamLeader || "(Not entered)"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Leader Contact:</span>{" "}
+                    <span className="font-semibold text-foreground">
+                      {form.members[0]?.phone || "(Not entered)"}
                     </span>
                   </div>
                   <div>

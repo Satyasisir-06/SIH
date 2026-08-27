@@ -3,6 +3,7 @@ import { z } from "zod";
 export const memberSchema = z.object({
   name: z.string().trim().min(2, "Enter the member name"),
   collegeRegId: z.string().trim().min(3, "Enter the college registration ID"),
+  phone: z.string().trim().min(10, "Enter a valid 10-digit mobile number"),
   year: z.string().min(1, "Select the year"),
   department: z.string().trim().min(2, "Enter the department"),
   gender: z.enum(["Male", "Female", "Other"]),

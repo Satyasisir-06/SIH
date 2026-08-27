@@ -31,7 +31,7 @@ export function buildSheetPayload(
   const members = data.members || [];
 
   const formatMember = (m?: (typeof members)[number]) =>
-    m ? `${m.name} | Reg: ${m.collegeRegId} | Yr: ${m.year} | Dept: ${m.department} | ${m.gender}` : "-";
+    m ? `${m.name} | Reg: ${m.collegeRegId} | Phone: ${m.phone || "N/A"} | Yr: ${m.year} | Dept: ${m.department} | ${m.gender}` : "-";
 
   return {
     registrationId,
@@ -42,7 +42,7 @@ export function buildSheetPayload(
     members: members
       .map(
         (m, i) =>
-          `${i + 1}. ${m.name} (${m.collegeRegId}, ${m.year}, ${m.department}, ${m.gender})`,
+          `${i + 1}. ${m.name} (Reg: ${m.collegeRegId}, Phone: ${m.phone || "N/A"}, Yr: ${m.year}, Dept: ${m.department}, ${m.gender})`,
       )
       .join("\n"),
     femaleCount: members.filter((m) => m.gender === "Female").length,
