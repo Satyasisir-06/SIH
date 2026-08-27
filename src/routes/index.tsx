@@ -176,19 +176,19 @@ function Index() {
           <Reveal delay={300}>
             <div className="surface-card h-full p-6 sm:p-8">
               <Trophy className="h-8 w-8 text-gold mb-6" />
-              <h3 className="text-xl font-bold mb-4">Registration & Entry</h3>
+              <h3 className="text-xl font-bold mb-4">Registration Details</h3>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-gold mt-1.5 shrink-0" />
-                  <span className="font-semibold text-emerald-400">Free Registration</span>
+                  <span>Instant team registration ID generated on submission.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-gold mt-1.5 shrink-0" />
-                  <span>No registration fee for eligible students.</span>
+                  <span>Fee payment can be completed via the official QR code on the event poster.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-gold mt-1.5 shrink-0" />
-                  <span>Instant team registration ID on submission.</span>
+                  <span>Keep your registration ID handy for verification during check-in.</span>
                 </li>
               </ul>
             </div>

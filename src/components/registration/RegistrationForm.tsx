@@ -562,12 +562,6 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
                     <span className="text-muted-foreground">Team Size:</span>{" "}
                     <span className="font-semibold text-foreground">6 Members</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">Entry Fee:</span>{" "}
-                    <span className="font-semibold text-emerald-400">
-                      Free (Internal Hackathon)
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>

@@ -41,7 +41,7 @@ function RegisterPage() {
               Register your <span className="text-gold-gradient">team</span>
             </h1>
             <p className="mt-4 max-w-xl text-muted-foreground">
-              {EVENT.feeLabel} • Teams of {EVENT.teamSize} members • {EVENT.femaleMemberRule}
+              Teams of {EVENT.teamSize} members • {EVENT.femaleMemberRule}
             </p>
           </div>
           <div className="shrink-0">

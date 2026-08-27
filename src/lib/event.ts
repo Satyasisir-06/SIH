@@ -73,7 +73,10 @@ export const FAQS = [
     q: "Is a female member mandatory?",
     a: "Yes. At least 1 female member is mandatory per team.",
   },
-  { q: "What is the registration fee?", a: "Free. There is no fee for the internal hackathon." },
+  {
+    q: "How is the payment completed?",
+    a: "Payment can be completed by scanning the official QR code displayed on the hackathon poster.",
+  },
   { q: "When is the registration deadline?", a: "01 September 2026." },
   { q: "When is the internal hackathon?", a: "08 September 2026 to 10 September 2026." },
   { q: "Where will it be conducted?", a: "Seminar Hall, Abdul Kalam Block." },
