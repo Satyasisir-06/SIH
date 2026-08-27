@@ -7,7 +7,7 @@ export type SubmitRegistrationResult = {
   problemStatementId: string;
   problemStatementTitle: string;
   memberCount: number;
-  paymentTxnId: string;
+  paymentTxnId?: string;
 };
 
 export const submitRegistration = createServerFn({ method: "POST" })

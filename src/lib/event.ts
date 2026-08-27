@@ -14,15 +14,13 @@ export const EVENT = {
   venue: "Seminar Hall, Abdul Kalam Block",
   teamSize: 6,
   femaleMemberRule: "At least 1 female member is mandatory per team.",
-  fee: 500,
-  feeLabel: "₹500 per participant",
+  fee: 0,
+  feeLabel: "Free Registration",
   eligibility: "All 2nd, 3rd and 4th year students are eligible to participate.",
   deadlineLabel: "01 SEPTEMBER 2026",
   deadlineISO: "2026-09-01T23:59:59+05:30",
   // Placeholder — replace with the official college name when supplied.
   collegeName: "CEC",
-  // Placeholder — replace with the official UPI ID when supplied.
-  upiId: "9573144854@ybl",
 } as const;
 
 export const COORDINATORS = [
@@ -75,7 +73,7 @@ export const FAQS = [
     q: "Is a female member mandatory?",
     a: "Yes. At least 1 female member is mandatory per team.",
   },
-  { q: "What is the registration fee?", a: "₹500 per participant." },
+  { q: "What is the registration fee?", a: "Free. There is no fee for the internal hackathon." },
   { q: "When is the registration deadline?", a: "01 September 2026." },
   { q: "When is the internal hackathon?", a: "08 September 2026 to 10 September 2026." },
   { q: "Where will it be conducted?", a: "Seminar Hall, Abdul Kalam Block." },

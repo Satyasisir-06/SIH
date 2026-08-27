@@ -74,10 +74,10 @@ export async function persistRegistration(
         problem_statement_id: data.problemStatementId,
         problem_statement_title: data.problemStatementTitle,
         problem_statement_domain: data.problemStatementDomain || null,
-        payment_amount: FEE * data.members.length,
-        payment_txn_id: data.paymentTxnId,
+        payment_amount: 0,
+        payment_txn_id: data.paymentTxnId || "FREE",
         payment_screenshot_path: screenshotPath,
-        payment_status: "pending",
+        payment_status: "confirmed",
       });
     }
   } catch (supabaseErr) {
@@ -91,7 +91,7 @@ export async function persistRegistration(
     problemStatementId: data.problemStatementId,
     problemStatementTitle: data.problemStatementTitle,
     memberCount: data.members.length,
-    paymentTxnId: data.paymentTxnId,
+    paymentTxnId: data.paymentTxnId || "FREE",
   };
 }
 

@@ -17,14 +17,15 @@ export const registrationSchema = z.object({
   problemStatementTitle: z.string().trim().min(1, "Enter the problem statement"),
   problemStatementDomain: z.string().trim().optional().or(z.literal("")),
 
-  paymentTxnId: z.string().trim().min(4, "Enter the payment transaction ID"),
+  paymentTxnId: z.string().trim().optional(),
   paymentScreenshot: z
     .object({
       name: z.string(),
       type: z.string(),
       dataUrl: z.string().min(20),
     })
-    .nullable(),
+    .nullable()
+    .optional(),
 });
 
 export type RegistrationInput = z.infer<typeof registrationSchema>;

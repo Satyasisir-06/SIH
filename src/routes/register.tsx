@@ -16,12 +16,12 @@ export const Route = createFileRoute("/register")({
       {
         name: "description",
         content:
-          "Register your team for the SIH 2026 internal hackathon: team details, problem statement and ₹500 per participant payment proof.",
+          "Register your team for the SIH 2026 internal hackathon: team details and problem statement selection.",
       },
       { property: "og:title", content: "Register your team | SIH 2026 Internal Hackathon" },
       {
         property: "og:description",
-        content: `Three-step registration for the SIH 2026 internal hackathon. Deadline ${EVENT.deadlineLabel}.`,
+        content: `Two-step registration for the SIH 2026 internal hackathon. Deadline ${EVENT.deadlineLabel}.`,
       },
     ],
   }),

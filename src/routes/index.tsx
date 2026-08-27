@@ -176,19 +176,19 @@ function Index() {
           <Reveal delay={300}>
             <div className="surface-card h-full p-6 sm:p-8">
               <Trophy className="h-8 w-8 text-gold mb-6" />
-              <h3 className="text-xl font-bold mb-4">Registration Fee</h3>
+              <h3 className="text-xl font-bold mb-4">Registration & Entry</h3>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-gold mt-1.5 shrink-0" />
-                  <span>{EVENT.feeLabel}</span>
+                  <span className="font-semibold text-emerald-400">Free Registration</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-gold mt-1.5 shrink-0" />
-                  <span>Fee must be paid via UPI during registration.</span>
+                  <span>No registration fee for eligible students.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-gold mt-1.5 shrink-0" />
-                  <span>Upload payment screenshot for verification.</span>
+                  <span>Instant team registration ID on submission.</span>
                 </li>
               </ul>
             </div>
@@ -213,7 +213,7 @@ function Index() {
                 {[
                   { title: "Browse Problems", desc: "Visit the problem statements page and find a challenge that fits your team's skills." },
                   { title: "Form Your Team", desc: "Assemble a team of up to 6 members. Ensure you have at least one female member." },
-                  { title: "Register & Pay", desc: "Fill the registration form, pay the fee via the PhonePe QR, and submit details." },
+                  { title: "Register Team", desc: "Fill the registration form with your team members and selected problem statement." },
                   { title: "Confirmation", desc: "Receive your unique SIH26 registration ID. Your team is now in the running!" }
                 ].map((step, i) => (
                   <li key={i} className="flex gap-4 sm:gap-6">

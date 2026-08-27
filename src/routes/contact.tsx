@@ -11,7 +11,7 @@ export const Route = createFileRoute("/contact")({
       {
         name: "description",
         content:
-          "Reach the SIH 2026 internal hackathon faculty SPOC and student coordinators for registration, payment or problem statement queries.",
+          "Reach the SIH 2026 internal hackathon faculty SPOC and student coordinators for registration, team or problem statement queries.",
       },
       { property: "og:title", content: "Contact the SIH 2026 organising team" },
       {
@@ -29,7 +29,7 @@ function ContactPage() {
       <SectionHeading
         eyebrow="Contact"
         title="Talk to the organising team"
-        subtitle="For any query about registration, payment, teams or problem statements, reach out to the coordinators below."
+        subtitle="For any query about registration, teams, guidelines or problem statements, reach out to the coordinators below."
       />
 
       <div className="mt-14 grid gap-6 md:grid-cols-3">

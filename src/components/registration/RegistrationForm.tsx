@@ -1,13 +1,25 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, ArrowRight, CheckCircle2, Copy, Loader2, Trash2, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  Copy,
+  Info,
+  Layers,
+  Loader2,
+  Search,
+  Sparkles,
+  Tag,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -17,13 +29,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EVENT, YEAR_OPTIONS, COORDINATORS } from "@/lib/event";
+import { PROBLEM_STATEMENTS, type ProblemStatement } from "@/data/problemStatements";
 import { submitRegistration } from "@/lib/registration.functions";
 import type { SubmitRegistrationResult } from "@/lib/registration.functions";
 import type { RegistrationInput, TeamMemberInput } from "@/lib/registration-schema";
 
-const QR_IMAGE = "/phonepe-qr.png";
-
-const STEPS = ["Team Details", "Problem Statement", "Payment"] as const;
+const STEPS = ["Team Details", "Problem Statement"] as const;
 
 const TEAM_SIZE = 6;
 
@@ -35,18 +46,48 @@ const emptyMember = (): TeamMemberInput => ({
   gender: "Male",
 });
 
+export function findProblemStatement(idOrQuery: string): ProblemStatement | undefined {
+  if (!idOrQuery) return undefined;
+  const q = idOrQuery.trim().toLowerCase();
+  const cleanQ = q.replace(/[\s-_]/g, "");
+
+  // 1. Direct match by ID
+  const directMatch = PROBLEM_STATEMENTS.find((p) => {
+    const pIdClean = p.id.toLowerCase().replace(/[\s-_]/g, "");
+    return pIdClean === cleanQ || p.id.toLowerCase() === q;
+  });
+  if (directMatch) return directMatch;
+
+  // 2. Numeric suffix match (e.g. "26001" or "001")
+  if (cleanQ.length >= 3) {
+    const suffixMatch = PROBLEM_STATEMENTS.find((p) => {
+      const pIdClean = p.id.toLowerCase().replace(/[\s-_]/g, "");
+      return pIdClean.endsWith(cleanQ);
+    });
+    if (suffixMatch) return suffixMatch;
+  }
+
+  // 3. Title match if exact or startsWith
+  return PROBLEM_STATEMENTS.find(
+    (p) => p.title.toLowerCase() === q || p.title.toLowerCase().startsWith(q),
+  );
+}
+
 type FormState = Omit<RegistrationInput, "members"> & { members: TeamMemberInput[] };
 
-const initialState = (presetPs?: string): FormState => ({
-  teamName: "",
-  teamLeader: "",
-  members: Array.from({ length: TEAM_SIZE }, emptyMember),
-  problemStatementId: presetPs ?? "",
-  problemStatementTitle: "",
-  problemStatementDomain: "",
-  paymentTxnId: "",
-  paymentScreenshot: null,
-});
+const initialState = (presetPs?: string): FormState => {
+  const matched = presetPs ? findProblemStatement(presetPs) : undefined;
+  return {
+    teamName: "",
+    teamLeader: "",
+    members: Array.from({ length: TEAM_SIZE }, emptyMember),
+    problemStatementId: matched ? matched.id : (presetPs ?? ""),
+    problemStatementTitle: matched ? matched.title : "",
+    problemStatementDomain: matched ? matched.domain || matched.theme : "",
+    paymentTxnId: "FREE",
+    paymentScreenshot: null,
+  };
+};
 
 export function RegistrationForm({ presetProblemId }: { presetProblemId?: string | undefined }) {
   const [step, setStep] = useState(0);
@@ -54,13 +95,81 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitRegistrationResult | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [catalogSearch, setCatalogSearch] = useState("");
   const submit = useServerFn(submitRegistration);
+
+  // Sync state if preset problem ID from URL changes or loads
+  useEffect(() => {
+    if (presetProblemId) {
+      const matched = findProblemStatement(presetProblemId);
+      setForm((f) => ({
+        ...f,
+        problemStatementId: matched ? matched.id : presetProblemId,
+        problemStatementTitle: matched ? matched.title : f.problemStatementTitle,
+        problemStatementDomain: matched
+          ? matched.domain || matched.theme
+          : f.problemStatementDomain,
+      }));
+    }
+  }, [presetProblemId]);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
-  const total = EVENT.fee * form.members.length;
+  // Find currently matched problem statement
+  const matchedStatement = useMemo(() => {
+    return findProblemStatement(form.problemStatementId);
+  }, [form.problemStatementId]);
+
+  // Filter list for problem statement search helper
+  const searchResults = useMemo(() => {
+    const q = catalogSearch.trim().toLowerCase();
+    if (!q) return PROBLEM_STATEMENTS.slice(0, 8);
+    return PROBLEM_STATEMENTS.filter(
+      (p) =>
+        p.id.toLowerCase().includes(q) ||
+        p.title.toLowerCase().includes(q) ||
+        p.organization.toLowerCase().includes(q) ||
+        p.theme.toLowerCase().includes(q),
+    ).slice(0, 10);
+  }, [catalogSearch]);
+
+  function handleSelectProblem(problem: ProblemStatement) {
+    setForm((f) => ({
+      ...f,
+      problemStatementId: problem.id,
+      problemStatementTitle: problem.title,
+      problemStatementDomain: problem.domain || problem.theme,
+    }));
+    setErrors((e) => {
+      const copy = { ...e };
+      delete copy["problemStatementId"];
+      delete copy["problemStatementTitle"];
+      return copy;
+    });
+    setCatalogSearch("");
+    toast.success(`Selected ${problem.id}: ${problem.title.slice(0, 45)}…`);
+  }
+
+  function handleProblemIdInput(inputId: string) {
+    const matched = findProblemStatement(inputId);
+    if (matched) {
+      setForm((f) => ({
+        ...f,
+        problemStatementId: inputId,
+        problemStatementTitle: matched.title,
+        problemStatementDomain: matched.domain || matched.theme,
+      }));
+      setErrors((e) => {
+        const copy = { ...e };
+        delete copy["problemStatementId"];
+        delete copy["problemStatementTitle"];
+        return copy;
+      });
+    } else {
+      set("problemStatementId", inputId);
+    }
+  }
 
   function validateStep(current: number) {
     const e: Record<string, string> = {};
@@ -80,15 +189,11 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
     }
     if (current === 1) {
       if (!form.problemStatementId.trim()) {
-        e["problemStatementId"] = "Enter the problem statement number";
+        e["problemStatementId"] = "Enter the problem statement number (e.g. SIH26001)";
       }
       if (!form.problemStatementTitle.trim()) {
-        e["problemStatementTitle"] = "Enter the problem statement";
+        e["problemStatementTitle"] = "Enter the problem statement title";
       }
-    }
-    if (current === 2) {
-      if (form.paymentTxnId.trim().length < 4) e["paymentTxnId"] = "Enter the transaction ID";
-      if (!form.paymentScreenshot) e["paymentScreenshot"] = "Upload the payment screenshot";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -96,7 +201,7 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
 
   function next() {
     if (!validateStep(step)) {
-      toast.error("Please fix the highlighted fields.");
+      toast.error("Please fill in all required fields.");
       return;
     }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
@@ -108,31 +213,23 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function handleFile(file: File | undefined) {
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Screenshot must be smaller than 5 MB.");
-      return;
-    }
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(new Error("read failed"));
-      reader.readAsDataURL(file);
-    });
-    set("paymentScreenshot", { name: file.name, type: file.type, dataUrl });
-  }
-
   async function handleSubmit() {
-    if (!validateStep(2)) {
-      toast.error("Please fix the highlighted fields.");
+    if (!validateStep(1)) {
+      toast.error("Please fill in the problem statement details.");
       return;
     }
     setSubmitting(true);
     try {
-      const res = await submit({ data: form as RegistrationInput });
+      const res = await submit({
+        data: {
+          ...form,
+          paymentTxnId: "FREE",
+          paymentScreenshot: null,
+        } as RegistrationInput,
+      });
       setResult(res);
       window.scrollTo({ top: 0, behavior: "smooth" });
+      toast.success("Team registration submitted successfully!");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Registration failed. Please try again.");
     } finally {
@@ -149,7 +246,7 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
       <div className="surface-card mt-8 p-6 sm:p-8">
         {step === 0 ? (
           <Section
-            title="Team details"
+            title="Team Details"
             hint={`Exactly ${TEAM_SIZE} members required. ${EVENT.femaleMemberRule}`}
           >
             <div className="grid gap-5 sm:grid-cols-2">
@@ -173,12 +270,18 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
               {form.members.map((m, i) => (
                 <div key={i} className="rounded-lg border border-border bg-surface p-5">
                   <div className="mb-4 flex items-center justify-between">
-                    <p className="eyebrow">Member {i + 1}</p>
+                    <p className="eyebrow">
+                      {i === 0 ? `Member 1 (Team Leader)` : `Member ${i + 1}`}
+                    </p>
+                    {i === 0 && form.teamLeader ? (
+                      <span className="text-xs text-muted-foreground">Leader</span>
+                    ) : null}
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Name" error={errors[`m${i}name`] ?? undefined}>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <Field label="Full Name" error={errors[`m${i}name`] ?? undefined}>
                       <Input
                         value={m.name}
+                        placeholder="Student name"
                         onChange={(e) =>
                           set(
                             "members",
@@ -189,9 +292,10 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
                         }
                       />
                     </Field>
-                    <Field label="College ID" error={errors[`m${i}id`] ?? undefined}>
+                    <Field label="College Reg ID" error={errors[`m${i}id`] ?? undefined}>
                       <Input
                         value={m.collegeRegId}
+                        placeholder="e.g. 23B91A0501"
                         onChange={(e) =>
                           set(
                             "members",
@@ -227,6 +331,7 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
                     <Field label="Department" error={errors[`m${i}dept`] ?? undefined}>
                       <Input
                         value={m.department}
+                        placeholder="e.g. CSE, ECE, AI"
                         onChange={(e) =>
                           set(
                             "members",
@@ -274,138 +379,175 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
 
         {step === 1 ? (
           <Section
-            title="Problem statement"
-            hint="Enter the official SIH problem statement number your team will solve."
+            title="Problem Statement"
+            hint="Select or enter the official SIH 2026 problem statement your team will solve."
           >
-            <div className="space-y-5">
+            <div className="space-y-6">
+              {/* Quick Search / Catalog Picker */}
+              <div className="rounded-lg border border-gold/30 bg-gold-soft/30 p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gold">
+                  <Search className="h-4 w-4" /> Quick Search SIH Problem Catalog (
+                  {PROBLEM_STATEMENTS.length} available)
+                </div>
+                <div className="mt-2.5">
+                  <Input
+                    value={catalogSearch}
+                    onChange={(e) => setCatalogSearch(e.target.value)}
+                    placeholder="Search by ID (e.g. SIH26001), keyword (e.g. AI, Drone, Waste), or Ministry…"
+                    className="bg-background"
+                  />
+                </div>
+
+                {catalogSearch.trim() ? (
+                  <div className="mt-3 max-h-56 overflow-y-auto space-y-2 rounded-md border border-border bg-background p-2">
+                    {searchResults.length === 0 ? (
+                      <p className="p-3 text-center text-xs text-muted-foreground">
+                        No matching problem statement found. You can type custom details below.
+                      </p>
+                    ) : (
+                      searchResults.map((ps) => (
+                        <button
+                          key={ps.id}
+                          type="button"
+                          onClick={() => handleSelectProblem(ps)}
+                          className="flex w-full flex-col items-start rounded p-2.5 text-left text-xs transition-colors hover:bg-surface hover:text-foreground"
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <span className="font-display font-bold text-gold">{ps.id}</span>
+                            <Badge
+                              variant="outline"
+                              className="text-[0.65rem] border-border"
+                            >
+                              {ps.category}
+                            </Badge>
+                          </div>
+                          <p className="mt-1 line-clamp-1 font-medium text-foreground">
+                            {ps.title}
+                          </p>
+                          <p className="text-[0.65rem] text-muted-foreground">{ps.organization}</p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Problem Statement Number Input */}
               <Field
-                label="Problem statement number"
+                label="Problem statement number / ID"
                 error={errors["problemStatementId"] ?? undefined}
               >
-                <Input
-                  value={form.problemStatementId}
-                  onChange={(e) => set("problemStatementId", e.target.value)}
-                  placeholder="e.g. SIH25001"
-                />
+                <div className="relative">
+                  <Input
+                    value={form.problemStatementId}
+                    onChange={(e) => handleProblemIdInput(e.target.value)}
+                    placeholder="e.g. SIH26001"
+                    className="h-11 font-mono uppercase"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Typing a valid ID (e.g. <span className="text-gold font-mono">SIH26001</span>) will
+                  automatically look up and fill in the full problem statement and domain.
+                </p>
               </Field>
 
-              <Field label="Problem statement" error={errors["problemStatementTitle"] ?? undefined}>
+              {/* Matched Problem Statement Live Card */}
+              {matchedStatement ? (
+                <div className="rounded-xl border border-gold/40 bg-gold-soft/20 p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-display text-base font-bold text-gold">
+                        {matchedStatement.id}
+                      </span>
+                      <Badge variant={matchedStatement.category === "Hardware" ? "secondary" : "default"}>
+                        {matchedStatement.category}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Auto-filled from SIH Catalog
+                    </div>
+                  </div>
+
+                  <p className="mt-3 font-display text-sm font-semibold text-foreground">
+                    {matchedStatement.title}
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Building2 className="h-3.5 w-3.5 text-gold" />
+                      {matchedStatement.organization}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Layers className="h-3.5 w-3.5 text-gold" />
+                      {matchedStatement.theme}
+                    </span>
+                  </div>
+
+                  {matchedStatement.tags.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {matchedStatement.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="flex items-center gap-1 rounded-full border border-border bg-surface px-2 py-0.5 text-[0.65rem] text-muted-foreground"
+                        >
+                          <Tag className="h-2.5 w-2.5 text-gold" />
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {/* Problem Statement Full Title Textarea */}
+              <Field
+                label="Problem statement description / title"
+                error={errors["problemStatementTitle"] ?? undefined}
+              >
                 <Textarea
                   value={form.problemStatementTitle}
                   onChange={(e) => set("problemStatementTitle", e.target.value)}
-                  placeholder="Type or paste the full problem statement here…"
-                  rows={8}
+                  placeholder="Full title or description of the problem statement…"
+                  rows={5}
                 />
               </Field>
-            </div>
-          </Section>
-        ) : null}
 
-        {step === 2 ? (
-          <Section
-            title="Payment"
-            hint={`${EVENT.feeLabel}. Scan the PhonePe QR, pay, then enter the transaction ID and upload the screenshot.`}
-          >
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-lg border border-border bg-surface p-6 text-center">
-                <p className="eyebrow">Scan &amp; pay</p>
-                <div className="mx-auto mt-4 w-fit rounded-xl border border-gold/40 bg-background p-3">
-                  <img
-                    src={QR_IMAGE}
-                    alt="PhonePe payment QR code for SIH 2026 registration fee"
-                    className="h-48 w-48 object-contain"
-                    loading="lazy"
-                  />
+              {/* Review summary box */}
+              <div className="rounded-lg border border-border bg-surface p-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Info className="h-4 w-4 text-gold" /> Registration Summary
                 </div>
-                <p className="mt-4 font-display text-2xl font-bold text-gold">₹{total}</p>
-                <p className="text-xs text-muted-foreground">
-                  ₹{EVENT.fee} × {form.members.length}{" "}
-                  {form.members.length === 1 ? "participant" : "participants"}
-                </p>
-                <p className="mt-3 text-xs text-muted-foreground">UPI ID: {EVENT.upiId}</p>
-              </div>
-
-              <div className="space-y-5">
-                <Field
-                  label="Payment transaction ID / UTR"
-                  error={errors["paymentTxnId"] ?? undefined}
-                >
-                  <Input
-                    value={form.paymentTxnId}
-                    onChange={(e) => set("paymentTxnId", e.target.value)}
-                    placeholder="e.g. T2408XXXXXXXXXX"
-                  />
-                </Field>
-
-                <Field label="Payment screenshot" error={errors["paymentScreenshot"] ?? undefined}>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="sr-only"
-                    onChange={(e) => void handleFile(e.target.files?.[0])}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    className="flex w-full flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-surface px-4 py-8 text-sm text-muted-foreground transition-colors hover:border-gold/60 hover:text-foreground"
-                  >
-                    <Upload className="h-5 w-5 text-gold" />
-                    <span className="w-full break-all text-center">
-                      {form.paymentScreenshot
-                        ? form.paymentScreenshot.name
-                        : "Click to upload (PNG/JPG, max 5 MB)"}
+                <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
+                  <div>
+                    <span className="text-muted-foreground">Team Name:</span>{" "}
+                    <span className="font-semibold text-foreground">
+                      {form.teamName || "(Not entered)"}
                     </span>
-                  </button>
-                  {form.paymentScreenshot ? (
-                    <div className="mt-3 space-y-3">
-                      <img
-                        src={form.paymentScreenshot.dataUrl}
-                        alt="Uploaded payment screenshot preview"
-                        className="max-h-48 w-full rounded-lg border border-border object-contain"
-                      />
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="goldOutline"
-                          size="sm"
-                          onClick={() => fileRef.current?.click()}
-                        >
-                          Replace
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            set("paymentScreenshot", null);
-                            if (fileRef.current) fileRef.current.value = "";
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" /> Remove
-                        </Button>
-                      </div>
-                    </div>
-                  ) : null}
-                </Field>
-
-                <label className="flex items-start gap-3 text-xs text-muted-foreground">
-                  <Checkbox
-                    checked={confirmChecked(form)}
-                    onCheckedChange={() => undefined}
-                    disabled
-                    className="mt-0.5"
-                  />
-                  <span>
-                    Your payment will be verified manually by the coordinators. Registration is
-                    confirmed only after verification.
-                  </span>
-                </label>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Team Leader:</span>{" "}
+                    <span className="font-semibold text-foreground">
+                      {form.teamLeader || "(Not entered)"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Team Size:</span>{" "}
+                    <span className="font-semibold text-foreground">6 Members</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Entry Fee:</span>{" "}
+                    <span className="font-semibold text-emerald-400">
+                      Free (Internal Hackathon)
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </Section>
         ) : null}
 
+        {/* Form navigation buttons */}
         <div className="mt-10 flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
           <Button
             type="button"
@@ -414,9 +556,10 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
             disabled={step === 0 || submitting}
             className="h-12 w-full sm:w-auto"
           >
-            <ArrowLeft className="h-4 w-4" /> Back
+            <ArrowLeft className="h-4 w-4" /> Back to Team Details
           </Button>
-          {step < STEPS.length - 1 ? (
+
+          {step === 0 ? (
             <Button
               type="button"
               variant="gold"
@@ -424,7 +567,7 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
               onClick={next}
               className="h-12 w-full sm:w-auto"
             >
-              Continue <ArrowRight className="h-4 w-4" />
+              Continue to Problem Statement <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button
@@ -435,18 +578,14 @@ export function RegistrationForm({ presetProblemId }: { presetProblemId?: string
               disabled={submitting}
               className="h-12 w-full sm:w-auto"
             >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {submitting ? "Submitting…" : "Submit registration"}
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {submitting ? "Submitting Registration…" : "Submit Registration"}
             </Button>
           )}
         </div>
       </div>
     </div>
   );
-}
-
-function confirmChecked(form: FormState) {
-  return Boolean(form.paymentTxnId && form.paymentScreenshot);
 }
 
 function Stepper({ step }: { step: number }) {
@@ -495,7 +634,7 @@ function Stepper({ step }: { step: number }) {
             <p
               className={cn(
                 "mt-2 text-[0.7rem] uppercase tracking-wider",
-                i === step ? "text-gold" : "text-muted-foreground",
+                i === step ? "text-gold font-semibold" : "text-muted-foreground",
               )}
             >
               {label}
@@ -549,13 +688,13 @@ function Confirmation({ result }: { result: SubmitRegistrationResult }) {
       <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-gold-soft text-gold">
         <CheckCircle2 className="h-8 w-8" />
       </span>
-      <h2 className="mt-6 text-3xl font-bold">Registration submitted</h2>
+      <h2 className="mt-6 text-3xl font-bold">Registration Confirmed!</h2>
       <p className="mt-3 text-muted-foreground">
-        The coordinators will verify your payment and contact your team.
+        Your team has been successfully registered for the SIH 2026 Internal Hackathon.
       </p>
 
       <div className="surface-card mt-8 p-8">
-        <p className="eyebrow">Your registration ID</p>
+        <p className="eyebrow">Your Unique Registration ID</p>
         <p className="mt-3 font-display text-3xl font-bold tracking-wider text-gold">
           {result.registrationId}
         </p>
@@ -565,34 +704,42 @@ function Confirmation({ result }: { result: SubmitRegistrationResult }) {
           className="mt-4"
           onClick={() => {
             void navigator.clipboard.writeText(result.registrationId);
-            toast.success("Registration ID copied");
+            toast.success("Registration ID copied to clipboard");
           }}
         >
           <Copy className="h-4 w-4" /> Copy ID
         </Button>
 
         <dl className="mt-8 grid gap-4 text-left sm:grid-cols-2">
-          <Summary label="Team" value={result.teamName} />
-          <Summary label="Members" value={String(result.memberCount)} />
-          <Summary label="Problem statement" value={result.problemStatementId} />
-          <Summary label="Transaction ID" value={result.paymentTxnId} />
-          <Summary label="Event dates" value={EVENT.datesLong} />
+          <Summary label="Team Name" value={result.teamName} />
+          <Summary label="Members" value={`${result.memberCount} Participants`} />
+          <Summary label="Problem Statement ID" value={result.problemStatementId} />
+          <Summary label="Problem Statement" value={result.problemStatementTitle} />
+          <Summary label="Event Dates" value={EVENT.datesLong} />
           <Summary label="Venue" value={EVENT.venue} />
         </dl>
       </div>
 
       <div className="mt-8 rounded-lg border border-border bg-surface p-6 text-left text-sm text-muted-foreground">
-        <p className="eyebrow mb-3">Need help?</p>
+        <p className="eyebrow mb-3">Hackathon Coordinators</p>
         {COORDINATORS.map((c) => (
-          <p key={c.name}>
-            {c.name} — {c.phone}
+          <p key={c.name} className="py-0.5">
+            <span className="font-semibold text-foreground">{c.name}</span> ({c.role}, {c.detail}) —{" "}
+            <a href={`tel:${c.phone}`} className="text-gold hover:underline">
+              {c.phone}
+            </a>
           </p>
         ))}
       </div>
 
-      <Button asChild variant="gold" size="lg" className="mt-8">
-        <Link to="/">Back to home</Link>
-      </Button>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <Button asChild variant="gold" size="lg">
+          <Link to="/">Back to Home</Link>
+        </Button>
+        <Button asChild variant="goldOutline" size="lg">
+          <Link to="/problem-statements">View All Problem Statements</Link>
+        </Button>
+      </div>
     </div>
   );
 }
@@ -601,7 +748,7 @@ function Summary({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-border bg-surface p-4">
       <dt className="eyebrow mb-1">{label}</dt>
-      <dd className="text-sm">{value}</dd>
+      <dd className="text-sm font-medium text-foreground line-clamp-3">{value}</dd>
     </div>
   );
 }
