@@ -10,9 +10,13 @@ export const memberSchema = z.object({
 });
 
 export const registrationSchema = z.object({
-  teamName: z.string().trim().min(2, "Enter a team name"),
-  teamLeader: z.string().trim().min(2, "Enter the team leader name"),
-  members: z.array(memberSchema).length(6, "Exactly 6 team members are required"),
+  registrationType: z.enum(["full_team", "matchmaking"]).default("full_team"),
+  teamName: z.string().trim().optional().default(""),
+  teamLeader: z.string().trim().min(2, "Enter the contact person / leader name"),
+  members: z.array(memberSchema).min(1, "At least 1 member is required").max(6, "Maximum 6 members"),
+
+  skills: z.array(z.string()).optional().default([]),
+  teamNeedNote: z.string().trim().optional().default(""),
 
   problemStatementId: z.string().trim().min(1, "Enter the problem statement number"),
   problemStatementTitle: z.string().trim().min(1, "Enter the problem statement"),

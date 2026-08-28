@@ -212,8 +212,8 @@ function Index() {
               <ol className="mt-10 space-y-7">
                 {[
                   { title: "Browse Problems", desc: "Visit the problem statements page and find a challenge that fits your team's skills." },
-                  { title: "Form Your Team", desc: "Assemble a team of up to 6 members. Ensure you have at least one female member." },
-                  { title: "Register Team", desc: "Fill the registration form with your team members and selected problem statement." },
+                  { title: "Form Team or Join Solo Pool", desc: "Assemble a 6-member team, or register in the solo matchmaking pool to find teammates." },
+                  { title: "Register Online", desc: "Fill the registration form with your team or participant details and selected problem statement." },
                   { title: "Confirmation", desc: "Receive your unique SIH26 registration ID. Your team is now in the running!" }
                 ].map((step, i) => (
                   <li key={i} className="flex gap-4 sm:gap-6">

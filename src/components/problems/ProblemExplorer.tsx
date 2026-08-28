@@ -238,11 +238,18 @@ export function ProblemExplorer() {
                 statement are published on the official Smart India Hackathon portal under problem
                 ID {active.id}. Discuss the scope with your mentor before locking your selection.
               </p>
-              <Button asChild variant="gold" size="lg">
-                <Link to="/register" search={{ ps: active.id }}>
-                  Register with this problem statement
-                </Link>
-              </Button>
+              <div className="flex flex-col gap-2.5 sm:flex-row">
+                <Button asChild variant="gold" size="lg" className="flex-1">
+                  <Link to="/register" search={{ ps: active.id, mode: "team" }}>
+                    Register as Full Team (6 Members)
+                  </Link>
+                </Button>
+                <Button asChild variant="goldOutline" size="lg" className="flex-1">
+                  <Link to="/register" search={{ ps: active.id, mode: "solo" }}>
+                    Find Teammates / Solo (1–5)
+                  </Link>
+                </Button>
+              </div>
             </>
           ) : null}
         </DialogContent>

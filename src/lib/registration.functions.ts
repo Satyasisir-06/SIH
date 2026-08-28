@@ -3,7 +3,9 @@ import { registrationSchema, type RegistrationInput } from "./registration-schem
 
 export type SubmitRegistrationResult = {
   registrationId: string;
+  registrationType: "full_team" | "matchmaking";
   teamName: string;
+  teamLeader: string;
   problemStatementId: string;
   problemStatementTitle: string;
   memberCount: number;

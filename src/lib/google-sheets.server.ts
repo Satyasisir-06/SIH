@@ -1,6 +1,7 @@
 import type { RegistrationInput } from "./registration-schema";
 
 export type SheetRegistrationPayload = {
+  type: "full_team" | "matchmaking";
   registrationId: string;
   submittedAt: string;
   teamName: string;
@@ -9,6 +10,8 @@ export type SheetRegistrationPayload = {
   memberCount: number;
   members: string;
   femaleCount: number;
+  skills: string;
+  teamNeedNote: string;
   problemStatementId: string;
   problemStatementTitle: string;
   problemStatementDomain: string;
@@ -35,9 +38,10 @@ export function buildSheetPayload(
     m ? `${m.name} | Reg: ${m.collegeRegId} | Phone: ${m.phone || "N/A"} | Yr: ${m.year} | Dept: ${m.department} | ${m.gender}` : "-";
 
   return {
+    type: data.registrationType || "full_team",
     registrationId,
     submittedAt: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-    teamName: data.teamName,
+    teamName: data.teamName || (data.registrationType === "matchmaking" ? `Solo/Pool (${data.teamLeader})` : ""),
     teamLeader: data.teamLeader,
     leaderPhone: members[0]?.phone || "N/A",
     memberCount: members.length,
@@ -48,6 +52,8 @@ export function buildSheetPayload(
       )
       .join("\n"),
     femaleCount: members.filter((m) => m.gender === "Female").length,
+    skills: (data.skills || []).join(", ") || "General",
+    teamNeedNote: data.teamNeedNote || "Looking for teammates",
     problemStatementId: data.problemStatementId,
     problemStatementTitle: data.problemStatementTitle,
     problemStatementDomain: data.problemStatementDomain || "N/A",
@@ -87,4 +93,3 @@ export async function appendToGoogleSheets(payload: SheetRegistrationPayload): P
     throw new Error(`Google Sheets webhook failed (${res.status}): ${text}`);
   }
 }
-
