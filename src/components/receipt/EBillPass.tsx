@@ -241,14 +241,16 @@ export function EBillPass({ receipt }: { receipt: ReceiptData }) {
         <div className="mt-6 rounded-xl border border-border bg-surface p-4 print:border-black/10 print:bg-transparent">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground print:text-gray-700">
-              Registration Fee ({receipt.memberCount} Members Entry)
+              Registration Fee ({receipt.memberCount} {receipt.memberCount === 1 ? "Participant" : "Participants"} × ₹500.00 each)
             </span>
-            <span className="font-mono font-semibold text-foreground print:text-black">₹500.00</span>
+            <span className="font-mono font-semibold text-foreground print:text-black">
+              ₹{(receipt.memberCount * 500).toLocaleString("en-IN")}.00
+            </span>
           </div>
           <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-sm font-bold print:border-black/20">
             <span className="text-foreground print:text-black">Total Paid Amount</span>
             <span className="font-mono text-base text-emerald-400 print:text-black">
-              {receipt.amount} (Paid)
+              ₹{(receipt.memberCount * 500).toLocaleString("en-IN")}.00 (Paid)
             </span>
           </div>
         </div>

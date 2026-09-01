@@ -88,7 +88,7 @@ function recordToReceipt(record: ExistingRegistrationRecord): ReceiptData {
     submittedAt: "28 Aug 2026, 04:30 PM",
     paymentStatus: "PAID & VERIFIED",
     paymentMethod: "Official Poster QR Code (Confirmed)",
-    amount: "₹500.00",
+    amount: `₹${(record.memberCount * 500).toLocaleString("en-IN")}.00`,
   };
 }
 

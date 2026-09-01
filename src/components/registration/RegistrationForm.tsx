@@ -333,7 +333,7 @@ export function RegistrationForm({
             submittedAt: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
             paymentStatus: "PAID & VERIFIED",
             paymentMethod: "Official Poster QR Code (Confirmed)",
-            amount: "₹500.00",
+            amount: `₹${(form.members.length * 500).toLocaleString("en-IN")}.00`,
           };
           localStorage.setItem("sih26_recent_registration", JSON.stringify(receiptRecord));
         } catch {}
