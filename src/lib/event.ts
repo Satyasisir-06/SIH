@@ -16,7 +16,7 @@ export const EVENT = {
   femaleMemberRule: "At least 1 female member is mandatory per team.",
   fee: 0,
   feeLabel: "Free Registration",
-  eligibility: "All 2nd, 3rd and 4th year students are eligible to participate.",
+  eligibility: "All 1st, 2nd, 3rd and 4th year students are eligible to participate.",
   deadlineLabel: "01 SEPTEMBER 2026",
   deadlineISO: "2026-09-01T23:59:59+05:30",
   // Placeholder — replace with the official college name when supplied.
@@ -64,10 +64,10 @@ export const SKILL_OPTIONS = [
   "Other",
 ] as const;
 
-export const YEAR_OPTIONS = ["2nd Year", "3rd Year", "4th Year"] as const;
+export const YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year"] as const;
 
 export const FAQS = [
-  { q: "Who can participate?", a: "All 2nd, 3rd and 4th year students." },
+  { q: "Who can participate?", a: "All 1st, 2nd, 3rd and 4th year students across all departments." },
   { q: "What is the maximum team size?", a: "Up to 6 members." },
   {
     q: "Is a female member mandatory?",

@@ -146,6 +146,7 @@ export function RegistrationForm({
   }, [catalogSearch]);
 
   function handleModeChange(type: "full_team" | "matchmaking") {
+    setStep(0);
     if (type === "full_team") {
       setForm((f) => ({
         ...f,
@@ -160,6 +161,9 @@ export function RegistrationForm({
         ...f,
         registrationType: "matchmaking",
         members: f.members.slice(0, Math.min(f.members.length, 5)) || [emptyMember()],
+        problemStatementId: "",
+        problemStatementTitle: "",
+        problemStatementDomain: "",
       }));
     }
     setErrors({});
@@ -253,7 +257,7 @@ export function RegistrationForm({
       }
     }
 
-    if (current === 1) {
+    if (current === 1 && !isMatchmaking) {
       if (!form.problemStatementId.trim()) {
         e["problemStatementId"] = "Enter the problem statement number (e.g. SIH26001)";
       }
@@ -281,19 +285,25 @@ export function RegistrationForm({
   }
 
   async function handleSubmit() {
-    if (!validateStep(1)) {
-      toast.error("Please fill in the problem statement details.");
+    const stepToValidate = isMatchmaking ? 0 : 1;
+    if (!validateStep(stepToValidate)) {
+      toast.error("Please fill in all required fields.");
       return;
     }
     setSubmitting(true);
     try {
-      const res = await submit({
-        data: {
-          ...form,
-          paymentTxnId: "FREE",
-          paymentScreenshot: null,
-        } as RegistrationInput,
-      });
+      const payload: RegistrationInput = {
+        ...form,
+        problemStatementId: isMatchmaking ? "N/A" : form.problemStatementId,
+        problemStatementTitle: isMatchmaking
+          ? "To be selected after team formation"
+          : form.problemStatementTitle,
+        problemStatementDomain: isMatchmaking ? "N/A" : form.problemStatementDomain,
+        paymentTxnId: "FREE",
+        paymentScreenshot: null,
+      };
+
+      const res = await submit({ data: payload });
       setResult(res);
       window.scrollTo({ top: 0, behavior: "smooth" });
       toast.success(
@@ -336,7 +346,7 @@ export function RegistrationForm({
             </Badge>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            Register an official complete 6-member team (including ≥1 female member) ready for the internal hackathon.
+            Register an official complete 6-member team (including ≥1 female member) with your selected problem statement.
           </p>
         </button>
 
@@ -365,21 +375,22 @@ export function RegistrationForm({
             </Badge>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            Don't have 6 members yet? Register as a solo participant or partial team to find teammates &amp; match with others.
+            Don't have 6 members yet? Register as a solo participant or partial team. No problem statement needed right now.
           </p>
         </button>
       </div>
 
-      <Stepper step={step} isMatchmaking={isMatchmaking} />
+      {!isMatchmaking ? <Stepper step={step} /> : null}
 
       <div className="surface-card mt-8 p-6 sm:p-8">
+        {/* STEP 0: Member & Contact Details */}
         {step === 0 ? (
           <Section
-            title={isMatchmaking ? "Participant & Group Details" : "Team Details"}
+            title={isMatchmaking ? "Solo & Partial Team Registration" : "Team Details"}
             hint={
               isMatchmaking
-                ? "Register your details and let coordinators match you with teammates."
-                : `Exactly ${FULL_TEAM_SIZE} members required. ${EVENT.femaleMemberRule}`
+                ? "Open to all 1st, 2nd, 3rd and 4th year students. Register your details so coordinators can connect you with teammates."
+                : `Exactly ${FULL_TEAM_SIZE} members required. Open to 1st, 2nd, 3rd & 4th year students. ${EVENT.femaleMemberRule}`
             }
           >
             {/* Solo / Partial Team Notice Banner */}
@@ -388,7 +399,7 @@ export function RegistrationForm({
                 <div className="flex items-start gap-3">
                   <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-blue-400" />
                   <div className="text-xs leading-relaxed text-blue-200">
-                    <strong className="text-blue-300">Team Matchmaking Active:</strong> You don't need a full team to get started. Submit your details, skills, and teammate requirements. Student coordinators will connect you with other talented students to form a winning 6-member squad!
+                    <strong className="text-blue-300">Matchmaking Pool Active:</strong> You don't need a problem statement or full 6-member squad to sign up. Register your profile, skills, and contact info. Coordinators will connect you with other talented students to finalize your team and problem statement!
                   </div>
                 </div>
 
@@ -537,7 +548,7 @@ export function RegistrationForm({
                     <Field label="Department" error={errors[`m${i}dept`] ?? undefined}>
                       <Input
                         value={m.department}
-                        placeholder="e.g. CSE, ECE, AI"
+                        placeholder="e.g. CSE, ECE, AI, IT"
                         onChange={(e) =>
                           set(
                             "members",
@@ -593,8 +604,8 @@ export function RegistrationForm({
                           className={cn(
                             "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                             selected
-                              ? "border-gold bg-gold-soft text-gold"
-                              : "border-border bg-background text-muted-foreground hover:border-gold/40 hover:text-foreground",
+                              ? "border-blue-400 bg-blue-500/20 text-blue-300"
+                              : "border-border bg-background text-muted-foreground hover:border-blue-400/40 hover:text-foreground",
                           )}
                         >
                           {skill}
@@ -608,10 +619,43 @@ export function RegistrationForm({
                   <Textarea
                     value={form.teamNeedNote}
                     onChange={(e) => set("teamNeedNote", e.target.value)}
-                    placeholder="e.g. Looking for 1 female teammate and a UI/UX designer, or open to joining any existing AI/ML team."
+                    placeholder="e.g. Looking for 1 female teammate and a UI/UX designer, or open to joining any existing AI/ML squad."
                     rows={3}
                   />
                 </Field>
+
+                {/* Matchmaking Review Box */}
+                <div className="mt-4 rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-400">
+                    <Info className="h-4 w-4" /> Matchmaking Profile Summary
+                  </div>
+                  <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+                    <div>
+                      <span className="text-muted-foreground">Primary Contact:</span>{" "}
+                      <span className="font-semibold text-foreground">
+                        {form.teamLeader || "(Not entered)"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">WhatsApp Mobile:</span>{" "}
+                      <span className="font-semibold text-foreground">
+                        {form.members[0]?.phone || "(Not entered)"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Current Members:</span>{" "}
+                      <span className="font-semibold text-foreground">
+                        {form.members.length} {form.members.length === 1 ? "Participant" : "Participants"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Problem Statement:</span>{" "}
+                      <span className="font-semibold text-blue-300">
+                        To be chosen after team formation
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : null}
 
@@ -623,14 +667,11 @@ export function RegistrationForm({
           </Section>
         ) : null}
 
-        {step === 1 ? (
+        {/* STEP 1: Problem Statement (ONLY for Full Teams) */}
+        {step === 1 && !isMatchmaking ? (
           <Section
-            title={isMatchmaking ? "Preferred Problem Statement" : "Problem Statement"}
-            hint={
-              isMatchmaking
-                ? "Select the problem statement you or your group would like to work on (can be refined later)."
-                : "Select or enter the official SIH 2026 problem statement your team will solve."
-            }
+            title="Problem Statement"
+            hint="Select or enter the official SIH 2026 problem statement your 6-member team will solve."
           >
             <div className="space-y-6">
               {/* Quick Search / Catalog Picker */}
@@ -766,68 +807,66 @@ export function RegistrationForm({
               {/* Review summary box */}
               <div className="rounded-lg border border-border bg-surface p-5">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <Info className="h-4 w-4 text-gold" /> Registration Summary
+                  <Info className="h-4 w-4 text-gold" /> Full Team Summary
                 </div>
                 <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
                   <div>
-                    <span className="text-muted-foreground">Type:</span>{" "}
+                    <span className="text-muted-foreground">Team Name:</span>{" "}
                     <span className="font-semibold text-foreground">
-                      {isMatchmaking ? "Solo / Matchmaking Pool" : "Complete 6-Member Team"}
+                      {form.teamName || "(Not entered)"}
                     </span>
                   </div>
-                  {!isMatchmaking ? (
-                    <div>
-                      <span className="text-muted-foreground">Team Name:</span>{" "}
-                      <span className="font-semibold text-foreground">
-                        {form.teamName || "(Not entered)"}
-                      </span>
-                    </div>
-                  ) : null}
                   <div>
-                    <span className="text-muted-foreground">Primary Contact:</span>{" "}
+                    <span className="text-muted-foreground">Team Leader:</span>{" "}
                     <span className="font-semibold text-foreground">
                       {form.teamLeader || "(Not entered)"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Contact Mobile:</span>{" "}
+                    <span className="text-muted-foreground">Leader Contact:</span>{" "}
                     <span className="font-semibold text-foreground">
                       {form.members[0]?.phone || "(Not entered)"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Registered Members:</span>{" "}
-                    <span className="font-semibold text-foreground">
-                      {form.members.length} {form.members.length === 1 ? "Participant" : "Participants"}
-                    </span>
+                    <span className="text-muted-foreground">Team Size:</span>{" "}
+                    <span className="font-semibold text-foreground">6 Members</span>
                   </div>
-                  {isMatchmaking && form.skills && form.skills.length > 0 ? (
-                    <div className="sm:col-span-2">
-                      <span className="text-muted-foreground">Selected Skills:</span>{" "}
-                      <span className="font-semibold text-gold">
-                        {form.skills.join(", ")}
-                      </span>
-                    </div>
-                  ) : null}
                 </div>
               </div>
             </div>
           </Section>
         ) : null}
 
-        {/* Form navigation buttons */}
+        {/* Form navigation / Submit buttons */}
         <div className="mt-10 flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={back}
-            disabled={step === 0 || submitting}
-            className="h-12 w-full sm:w-auto"
-          >
-            <ArrowLeft className="h-4 w-4" /> Back to Details
-          </Button>
+          {!isMatchmaking && step === 1 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={back}
+              disabled={submitting}
+              className="h-12 w-full sm:w-auto"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to Team Details
+            </Button>
+          ) : (
+            <div className="hidden sm:block" />
+          )}
 
-          {step === 0 ? (
+          {isMatchmaking ? (
+            <Button
+              type="button"
+              variant="gold"
+              size="lg"
+              onClick={() => void handleSubmit()}
+              disabled={submitting}
+              className="h-12 w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white"
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {submitting ? "Submitting Request…" : "Submit to Matchmaking Pool"}
+            </Button>
+          ) : step === 0 ? (
             <Button
               type="button"
               variant="gold"
@@ -847,11 +886,7 @@ export function RegistrationForm({
               className="h-12 w-full sm:w-auto"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {submitting
-                ? "Submitting Registration…"
-                : isMatchmaking
-                  ? "Submit to Matchmaking Pool"
-                  : "Submit Team Registration"}
+              {submitting ? "Submitting Team…" : "Submit Team Registration"}
             </Button>
           )}
         </div>
@@ -860,11 +895,8 @@ export function RegistrationForm({
   );
 }
 
-function Stepper({ step, isMatchmaking }: { step: number; isMatchmaking: boolean }) {
-  const steps = [
-    isMatchmaking ? "Participant Details" : "Team Details",
-    isMatchmaking ? "Preferred Problem" : "Problem Statement",
-  ];
+function Stepper({ step }: { step: number }) {
+  const steps = ["Team Details", "Problem Statement"];
 
   return (
     <div>
@@ -973,7 +1005,7 @@ function Confirmation({ result }: { result: SubmitRegistrationResult }) {
 
       <p className="mt-3 text-muted-foreground">
         {isMatchmaking
-          ? "Your profile is active in the SIH 2026 Matchmaking Pool. Student coordinators will reach out on WhatsApp to connect you with prospective teammates."
+          ? "Your profile is active in the SIH 2026 Matchmaking Pool. Student coordinators will reach out on WhatsApp to connect you with prospective teammates and choose your problem statement."
           : "Your team is officially registered for the SIH 2026 Internal Hackathon. Keep your registration ID for future reference."}
       </p>
 
@@ -1008,8 +1040,14 @@ function Confirmation({ result }: { result: SubmitRegistrationResult }) {
             label="Registered Members"
             value={`${result.memberCount} ${result.memberCount === 1 ? "Participant" : "Participants"}`}
           />
-          <Summary label="Problem Statement ID" value={result.problemStatementId} />
-          <Summary label="Problem Statement" value={result.problemStatementTitle} />
+          {!isMatchmaking ? (
+            <>
+              <Summary label="Problem Statement ID" value={result.problemStatementId} />
+              <Summary label="Problem Statement" value={result.problemStatementTitle} />
+            </>
+          ) : (
+            <Summary label="Problem Statement Selection" value="To be chosen after team formation" />
+          )}
           <Summary label="Internal Hackathon Dates" value={EVENT.datesLong} />
         </dl>
       </div>

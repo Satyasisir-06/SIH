@@ -18,9 +18,9 @@ export const registrationSchema = z.object({
   skills: z.array(z.string()).optional().default([]),
   teamNeedNote: z.string().trim().optional().default(""),
 
-  problemStatementId: z.string().trim().min(1, "Enter the problem statement number"),
-  problemStatementTitle: z.string().trim().min(1, "Enter the problem statement"),
-  problemStatementDomain: z.string().trim().optional().or(z.literal("")),
+  problemStatementId: z.string().trim().optional().default(""),
+  problemStatementTitle: z.string().trim().optional().default(""),
+  problemStatementDomain: z.string().trim().optional().default(""),
 
   paymentTxnId: z.string().trim().optional(),
   paymentScreenshot: z

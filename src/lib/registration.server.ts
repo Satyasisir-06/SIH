@@ -25,6 +25,12 @@ export async function persistRegistration(
     if (data.members.length !== 6) {
       throw new Error("A full team must have exactly 6 members.");
     }
+    if (!data.problemStatementId?.trim()) {
+      throw new Error("Problem statement ID is required for full team registration.");
+    }
+    if (!data.problemStatementTitle?.trim()) {
+      throw new Error("Problem statement title is required for full team registration.");
+    }
   } else {
     if (data.members.length < 1 || data.members.length > 5) {
       throw new Error("Matchmaking pool registration requires between 1 and 5 members.");
@@ -32,9 +38,21 @@ export async function persistRegistration(
   }
 
   const registrationId = generateRegistrationId(data.registrationType);
+  const effectiveProblemId = isMatchmaking ? "N/A" : (data.problemStatementId || "N/A");
+  const effectiveProblemTitle = isMatchmaking
+    ? "To be selected after team formation"
+    : (data.problemStatementTitle || "N/A");
+  const effectiveDomain = isMatchmaking ? "N/A" : (data.problemStatementDomain || "N/A");
 
-  // Primary registration sync: Google Sheets (Routes to respective tab: Complete Teams or Team Matchmaking & Solo)
-  const sheetPayload = buildSheetPayload(data, registrationId);
+  const sanitizedData: RegistrationInput = {
+    ...data,
+    problemStatementId: effectiveProblemId,
+    problemStatementTitle: effectiveProblemTitle,
+    problemStatementDomain: effectiveDomain,
+  };
+
+  // Primary registration sync: Google Sheets
+  const sheetPayload = buildSheetPayload(sanitizedData, registrationId);
   try {
     await appendToGoogleSheets(sheetPayload);
   } catch (sheetErr) {
@@ -55,9 +73,9 @@ export async function persistRegistration(
         team_leader: data.teamLeader,
         member_count: data.members.length,
         members: data.members,
-        problem_statement_id: data.problemStatementId,
-        problem_statement_title: data.problemStatementTitle,
-        problem_statement_domain: data.problemStatementDomain || null,
+        problem_statement_id: effectiveProblemId,
+        problem_statement_title: effectiveProblemTitle,
+        problem_statement_domain: effectiveDomain,
         payment_amount: 0,
         payment_txn_id: data.paymentTxnId || "FREE",
         payment_screenshot_path: null,
@@ -73,8 +91,8 @@ export async function persistRegistration(
     registrationType: data.registrationType || "full_team",
     teamName: data.teamName || (isMatchmaking ? `Matchmaking Pool (${data.teamLeader})` : ""),
     teamLeader: data.teamLeader,
-    problemStatementId: data.problemStatementId,
-    problemStatementTitle: data.problemStatementTitle,
+    problemStatementId: effectiveProblemId,
+    problemStatementTitle: effectiveProblemTitle,
     memberCount: data.members.length,
     paymentTxnId: data.paymentTxnId || "FREE",
   };
