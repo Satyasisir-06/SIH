@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ProblemStatementsRouteImport } from './routes/problem-statements'
+import { Route as ReceiptRouteImport } from './routes/receipt'
 import { Route as RegisterRouteImport } from './routes/register'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const ProblemStatementsRoute = ProblemStatementsRouteImport.update({
   path: '/problem-statements',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReceiptRoute = ReceiptRouteImport.update({
+  id: '/receipt',
+  path: '/receipt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/problem-statements': typeof ProblemStatementsRoute
+  '/receipt': typeof ReceiptRoute
   '/register': typeof RegisterRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/problem-statements': typeof ProblemStatementsRoute
+  '/receipt': typeof ReceiptRoute
   '/register': typeof RegisterRoute
 }
 export interface FileRoutesById {
@@ -61,19 +69,33 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/problem-statements': typeof ProblemStatementsRoute
+  '/receipt': typeof ReceiptRoute
   '/register': typeof RegisterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/contact' | '/problem-statements' | '/register'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/problem-statements'
+    | '/receipt'
+    | '/register'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/contact' | '/problem-statements' | '/register'
+  to:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/problem-statements'
+    | '/receipt'
+    | '/register'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/contact'
     | '/problem-statements'
+    | '/receipt'
     | '/register'
   fileRoutesById: FileRoutesById
 }
@@ -82,6 +104,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   ContactRoute: typeof ContactRoute
   ProblemStatementsRoute: typeof ProblemStatementsRoute
+  ReceiptRoute: typeof ReceiptRoute
   RegisterRoute: typeof RegisterRoute
 }
 
@@ -115,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProblemStatementsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/receipt': {
+      id: '/receipt'
+      path: '/receipt'
+      fullPath: '/receipt'
+      preLoaderRoute: typeof ReceiptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -130,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   ContactRoute: ContactRoute,
   ProblemStatementsRoute: ProblemStatementsRoute,
+  ReceiptRoute: ReceiptRoute,
   RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport

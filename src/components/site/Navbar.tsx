@@ -9,8 +9,8 @@ const LINKS = [
   { label: "About SIH", to: "/about" as const, hash: undefined },
   { label: "Event", to: "/" as const, hash: "event" },
   { label: "Problem Statements", to: "/problem-statements" as const, hash: undefined },
-  { label: "How to Participate", to: "/" as const, hash: "participate" },
   { label: "Registration", to: "/register" as const, hash: undefined },
+  { label: "E-Bill / Pass", to: "/receipt" as const, hash: undefined },
   { label: "Contact", to: "/contact" as const, hash: undefined },
 ];
 

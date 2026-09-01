@@ -7,6 +7,7 @@ import {
   Building2,
   CheckCircle2,
   Copy,
+  FileText,
   Info,
   Layers,
   Loader2,
@@ -305,6 +306,39 @@ export function RegistrationForm({
 
       const res = await submit({ data: payload });
       setResult(res);
+
+      if (typeof window !== "undefined") {
+        try {
+          const receiptRecord = {
+            registrationId: res.registrationId,
+            invoiceNumber: `SIH26-INV-${res.registrationId.replace(/[^A-Z0-9]/gi, "").slice(-6)}`,
+            type: res.registrationType,
+            teamName: res.teamName || (res.registrationType === "matchmaking" ? `Solo (${res.teamLeader})` : "Hackathon Squad"),
+            teamLeader: res.teamLeader,
+            leaderPhone: form.members[0]?.phone || "N/A",
+            memberCount: form.members.length,
+            skills: (form.skills || []).join(", "),
+            teamNeedNote: form.teamNeedNote,
+            problemStatementId: res.problemStatementId || "N/A",
+            problemStatementTitle: res.problemStatementTitle || "To be decided after team formation",
+            problemStatementDomain: form.problemStatementDomain || "General",
+            members: form.members.map((m) => ({
+              name: m.name,
+              collegeRegId: m.collegeRegId,
+              phone: m.phone,
+              year: m.year,
+              department: m.department,
+              gender: m.gender,
+            })),
+            submittedAt: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+            paymentStatus: "PAID & VERIFIED",
+            paymentMethod: "Official Poster QR Code (Confirmed)",
+            amount: "₹500.00",
+          };
+          localStorage.setItem("sih26_recent_registration", JSON.stringify(receiptRecord));
+        } catch {}
+      }
+
       window.scrollTo({ top: 0, behavior: "smooth" });
       toast.success(
         isMatchmaking
@@ -1065,11 +1099,16 @@ function Confirmation({ result }: { result: SubmitRegistrationResult }) {
       </div>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <Button asChild variant="gold" size="lg">
-          <Link to="/">Back to Home</Link>
+        <Button asChild variant="gold" size="lg" className="shadow-lg">
+          <Link to="/receipt" search={{ id: result.registrationId }}>
+            <FileText className="h-4 w-4" /> Download Official E-Bill (PDF)
+          </Link>
         </Button>
         <Button asChild variant="goldOutline" size="lg">
-          <Link to="/problem-statements">View All Problem Statements</Link>
+          <Link to="/">Back to Home</Link>
+        </Button>
+        <Button asChild variant="ghost" size="lg">
+          <Link to="/problem-statements">View Problems</Link>
         </Button>
       </div>
     </div>

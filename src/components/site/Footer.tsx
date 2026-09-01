@@ -32,6 +32,9 @@ export function Footer() {
             <Link to="/register" className="text-muted-foreground hover:text-gold">
               Registration
             </Link>
+            <Link to="/receipt" className="text-muted-foreground hover:text-gold">
+              E-Bill / Event Pass
+            </Link>
             <Link to="/contact" className="text-muted-foreground hover:text-gold">
               Contact
             </Link>
